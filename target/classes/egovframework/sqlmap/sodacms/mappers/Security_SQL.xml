@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="user">
+
+	<resultMap type="UserVO" id="userMap">
+		<id column="user_id" property = "userId"/>
+		<id column="password" property = "password"/>
+		<id column="authorities" property = "authorities"/>
+		<id column="username_id" property = "name"/>
+		<id column="email " property = "email "/>
+		<id column="enabled" property = "enabled"/>
+	</resultMap>
+
+	<select id="selectUserById" resultMap="userMap">
+		<![CDATA[
+			SELECT
+					user_id, 
+					password, 
+       				(select authorities from tb_user_auth b where b.user_id = a.user_id) as authorities, 
+					name, 
+					email, 
+					enabled
+			FROM
+				tb_user a
+			WHERE
+				user_id = #{loginId}
+		]]>
+	</select>
+
+</mapper>

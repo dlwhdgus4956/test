@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sgms.admin.service.impl.SgmsAdminMapper">
+	<select id="selectDeptList" resultType="hashMap">
+		SELECT	manager_nm,
+				manager_code,
+				row_number() over(order by manager_code asc) rn
+		FROM	gw_manager_code
+		<if test="searchKeyword !='' and searchKeyword != null">
+			<if test="searchCondition == 'name'">
+				WHERE manager_nm = #{searchKeyword}
+			</if>
+			<if test="searchCondition == 'code'">
+				WHERE manager_code = #{searchKeyword} 
+			</if>
+		</if>
+	</select>
+	
+	<insert id="insertManagerCode">
+		INSERT INTO gw_manager_code
+					(	
+						manager_nm,
+						manager_code
+					)
+		VALUES		(
+						#{managerName},
+						#{managerCode}				
+					)
+	</insert>
+	
+	<update id="updateManagerCode">
+		UPDATE	gw_manager_code
+		SET		manager_nm = #{managerName},
+				manager_code = #{managerCode}
+		WHERE	manager_code = #{oldManagerCode}
+	</update>
+	
+	<delete id="deleteManagerCode">
+		DELETE FROM gw_manager_code
+		WHERE	manager_code = #{managerCode}
+	</delete>
+	
+	<select id="siteCount" resultType="hashMap">
+	SELECT	manager_nm,
+			cntTable.cnt
+	FROM 	(	SELECT gsi.manager_code, COUNT(*) cnt 
+			FROM gw_site_info gsi 
+			GROUP by gsi.manager_code
+			)cntTable,
+			gw_manager_code gmc
+	WHERE	gmc.manager_code = cntTable.manager_code
+	</select>
+</mapper>

@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cms.openYard.service.impl.OpenYardMapper">
+	
+	<!-- 공지사항리스트  -->
+	<select id="selectNoticeList" parameterType="hashMap" resultType="hashMap">
+		select 
+			notice_no
+			,title
+			,content
+			,writer
+			,wri_date
+			,file_no
+			,remove_stat
+		from tb_notice
+		where 1=1
+			and remove_stat = 'N'
+			<if test="searchkeyword != null and searchkeyword != ''">
+				<choose>
+					<when test='searchtype == "1"'>
+						AND writer LIKE '%'|| #{searchkeyword} ||'%'
+				    </when>
+				    <when test='searchtype == "2"'>
+						AND title LIKE '%'|| #{searchkeyword} ||'%'
+				    </when>
+				    									    									    
+				    <when test='searchtype == ""'>
+						AND (
+							writer LIKE '%'|| #{searchkeyword} ||'%'												
+							or title LIKE '%'|| #{searchkeyword} ||'%'
+						)
+					</when>
+				</choose>
+			</if>	
+		LIMIT 10 OFFSET #{startNo}
+	</select>
+	
+	<select id="selectNoticeListCount" parameterType="hashMap" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM tb_notice
+			WHERE 1=1
+				and remove_stat = 'N'
+				<if test="searchkeyword != null and searchkeyword != ''">
+					<choose>
+						<when test='searchtype == "1"'>
+							AND writer LIKE '%'|| #{searchkeyword} ||'%'
+					    </when>
+					    <when test='searchtype == "2"'>
+							AND title LIKE '%'|| #{searchkeyword} ||'%'
+					    </when>
+					    									    									    
+					    <when test='searchtype == ""'>
+							AND (
+								writer LIKE '%'|| #{searchkeyword} ||'%'												
+								or title LIKE '%'|| #{searchkeyword} ||'%'
+							)
+						</when>
+					</choose>
+				</if>	
+				LIMIT 10 OFFSET #{startNo}
+	</select>	
+	
+	<!-- 공지사항 조회  -->
+	<select id="selectNotice" parameterType="hashMap" resultType="hashMap">
+		select 
+			aa.notice_no
+			,aa.title
+			,aa.content
+			,aa.writer
+			,aa.wri_date
+			,aa.file_no
+			,aa.remove_stat
+			,file.file_org_nm
+		from tb_notice aa
+			LEFT OUTER JOIN tb_file_info file ON file.FILE_NO = aa.FILE_NO
+		where 1=1
+			and notice_no = #{noticeNo}
+	</select>	
+	
+	<!-- 자료실 리스트  -->
+	<select id="selectRecsroomList" parameterType="hashMap" resultType="hashMap">
+		select 
+			recsroom_no
+			,title
+			,content
+			,writer
+			,wri_date
+			,file_no
+			,remove_stat
+		from tb_recsroom
+		where 1=1
+			and remove_stat = 'N'
+			<if test="searchkeyword != null and searchkeyword != ''">
+				<choose>
+					<when test='searchtype == "1"'>
+						AND writer LIKE '%'|| #{searchkeyword} ||'%'
+				    </when>
+				    <when test='searchtype == "2"'>
+						AND title LIKE '%'|| #{searchkeyword} ||'%'
+				    </when>
+				    									    									    
+				    <when test='searchtype == ""'>
+						AND (
+							writer LIKE '%'|| #{searchkeyword} ||'%'												
+							or title LIKE '%'|| #{searchkeyword} ||'%'
+						)
+					</when>
+				</choose>
+			</if>	
+		LIMIT 10 OFFSET #{startNo}
+	</select>
+	
+	<select id="selectRecsroomListCount" parameterType="hashMap" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM tb_recsroom
+			WHERE 1=1
+				and remove_stat = 'N'
+				<if test="searchkeyword != null and searchkeyword != ''">
+					<choose>
+						<when test='searchtype == "1"'>
+							AND writer LIKE '%'|| #{searchkeyword} ||'%'
+					    </when>
+					    <when test='searchtype == "2"'>
+							AND title LIKE '%'|| #{searchkeyword} ||'%'
+					    </when>
+					    									    									    
+					    <when test='searchtype == ""'>
+							AND (
+								writer LIKE '%'|| #{searchkeyword} ||'%'												
+								or title LIKE '%'|| #{searchkeyword} ||'%'
+							)
+						</when>
+					</choose>
+				</if>	
+				LIMIT 10 OFFSET #{startNo}
+	</select>
+	
+	<!-- 자료실 조회  -->
+	<select id="selectRecsroom" parameterType="hashMap" resultType="hashMap">
+		select 
+			aa.recsroom_no
+			,aa.title
+			,aa.content
+			,aa.writer
+			,aa.wri_date
+			,aa.file_no
+			,aa.remove_stat
+			,file.file_org_nm
+		from tb_recsroom aa
+			LEFT OUTER JOIN tb_file_info file ON file.FILE_NO = aa.FILE_NO
+		where 1=1
+			and recsroom_no = #{recsroomNo}
+	</select>
+	
+	<!-- 요청게시판 리스트  -->
+	<select id="selectReqList" parameterType="hashMap" resultType="hashMap">
+		select 
+			req_no
+			,title
+			,content
+			,writer
+			,wri_date
+			,file_no
+			,remove_stat
+		from tb_reqboard
+		where 1=1
+			and remove_stat = 'N'
+			<if test="searchkeyword != null and searchkeyword != ''">
+				<choose>
+					<when test='searchtype == "1"'>
+						AND writer LIKE '%'|| #{searchkeyword} ||'%'
+				    </when>
+				    <when test='searchtype == "2"'>
+						AND title LIKE '%'|| #{searchkeyword} ||'%'
+				    </when>
+				    									    									    
+				    <when test='searchtype == ""'>
+						AND (
+							writer LIKE '%'|| #{searchkeyword} ||'%'												
+							or title LIKE '%'|| #{searchkeyword} ||'%'
+						)
+					</when>
+				</choose>
+			</if>	
+		LIMIT 10 OFFSET #{startNo}
+	</select>
+	
+	<select id="selectReqListCount" parameterType="hashMap" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM tb_reqboard
+			WHERE 1=1
+				and remove_stat = 'N'
+				<if test="searchkeyword != null and searchkeyword != ''">
+					<choose>
+						<when test='searchtype == "1"'>
+							AND writer LIKE '%'|| #{searchkeyword} ||'%'
+					    </when>
+					    <when test='searchtype == "2"'>
+							AND title LIKE '%'|| #{searchkeyword} ||'%'
+					    </when>
+					    									    									    
+					    <when test='searchtype == ""'>
+							AND (
+								writer LIKE '%'|| #{searchkeyword} ||'%'												
+								or title LIKE '%'|| #{searchkeyword} ||'%'
+							)
+						</when>
+					</choose>
+				</if>	
+				LIMIT 10 OFFSET #{startNo}
+	</select>	
+	
+	<!-- 요청게시판 조회  -->
+	<select id="selectReq" parameterType="hashMap" resultType="hashMap">
+		select 
+			aa.req_no
+			,aa.title
+			,aa.content
+			,aa.writer
+			,aa.wri_date
+			,aa.file_no
+			,aa.remove_stat
+			,file.file_org_nm
+		from tb_reqboard aa
+			LEFT OUTER JOIN tb_file_info file ON file.FILE_NO = aa.FILE_NO
+		where 1=1
+			and req_no = #{reqNo}
+	</select>
+	
+	<!-- 요청게시판 등록 -->
+	<insert id="insertReq" parameterType="hashMap">
+	
+		INSERT INTO tb_reqboard(
+            			req_no, 
+            			title,
+            			content, 
+            			writer,
+            			wri_date,
+            			file_no)
+	    VALUES (nextval('req_no_seq'), 
+	    		#{title},
+	    		#{content},
+	    		#{writer},
+	    		to_char(sysdate, 'YYYYMMDD'), 
+	    		#{fileNo})
+	
+	</insert>
+	
+	<!-- 요청게시판 수정 -->
+	<update id="updateReq" parameterType="hashMap">
+	
+		UPDATE tb_reqboard
+		   SET  
+		   		title = #{title} 
+		   		,content = #{content}
+		   		,writer = #{writer} 
+		       	,wri_date = to_char(sysdate, 'YYYYMMDD')
+		       	,file_no = #{fileNo}
+		WHERE req_no = #{reqNo}
+	
+	</update>
+	
+	<!--요청게시판 삭제  -->
+	<update id="deleteReq" parameterType="long">
+	
+		UPDATE tb_reqboard 
+		SET 	remove_stat = 'Y'
+		WHERE req_no = #{reqNo}
+		
+	</update>
+	
+	<!-- 업로드파일 일괄삭제 Null처리 -->
+	<update id="deleteReqFile" parameterType="long" flushCache="true">
+	
+		UPDATE tb_reqboard 
+		SET 	file_no = NULL
+	 	WHERE req_no = #{reqNo}
+	 	
+	</update>
+	
+	
+</mapper>

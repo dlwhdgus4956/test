@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sgms.test.service.impl.TestMapper">
+	<select id="selectTest" resultType="hashMap">
+		SELECT	row_number() over() rn,
+				gsi.site_nm,
+				gsi.site_code,
+				lastData.data_time,
+				gdv.el,
+				gdv.scond
+		FROM	gw_site_info gsi ,
+				(SELECT	data_time,
+						site_code,
+						row_number() over(PARTITION BY site_code ORDER BY data_time desc) rnumber
+				 FROM	gw_data_value 
+				 ORDER BY rnumber 
+				 LIMIT 	(select	count(site_code) from	gw_site_info )
+				) lastData ,
+				gw_modem_info gmi ,
+				gw_data_value gdv 
+		WHERE	gsi.site_code = lastData.site_code
+		AND		gsi.site_code = gmi.site_code
+		AND		gsi.site_code = gdv.site_code
+		AND		lastData.site_code = gmi.site_code
+		AND		lastData.data_time = gdv.data_time
+		AND 	gmi.site_code = gdv.site_code
+	</select>
+</mapper>

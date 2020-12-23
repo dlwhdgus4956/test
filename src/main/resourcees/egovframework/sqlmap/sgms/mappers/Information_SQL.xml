@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sgms.information.service.impl.InformationMapper">
+
+	<select id="selectPoint" resultType="hashMap">
+		SELECT	site_nm,
+				site_litd,
+				site_lttd
+				
+		FROM	gw_site_info
+		<if test="managerCode != 'admin'">
+		WHERE	manager_code = #{managerCode}
+		</if>
+		ORDER BY site_nm
+	</select>
+
+	<select id="selectLocationList" resultType="hashMap">
+		SELECT	site_nm,
+				addr,
+				site_code,
+				site_litd,
+				site_lttd,
+				w_dvop_year,
+				site_oper,
+				w_elev,
+				w_csi_dia,
+				w_dig_dph,
+				w_nat_wtlv
+		FROM	gw_site_info
+		<where>
+		<if test="managerCode != 'admin'">
+		AND	manager_code = #{managerCode}
+		</if>
+		<if test="searchKeyword !='' and searchKeyword != null">
+			<if test="searchCondition == 'name'">
+				AND site_nm = #{searchKeyword}
+			</if>
+			<if test="searchCondition == 'code'">
+				AND site_code = #{searchKeyword} 
+			</if>
+		</if>
+		</where>
+		ORDER BY site_nm
+	</select>	
+	<select id="selectSpotList" resultType="hashMap">
+		SELECT	row_number() over(order by a.site_code asc) rn,
+				a.SITE_CODE,
+				a.SITE_NM,
+				a.SITE_OPER,
+				a.SITE_LITD,
+				a.SITE_LTTD,
+				a.ADDR,
+				a.RDN_ADDR,
+				a.W_TYPE,
+				a.W_SRV,
+				a.W_DTL_SRV,
+				a.W_ELEV,
+				a.W_DIG_DPH,
+				a.W_CSI_DIA,
+				a.W_DRINK_YN,
+				a.W_PUBLIC,
+				a.W_DVOP_YEAR,
+				a.W_OBSV_YEAR,
+				a.W_NAT_WTLV,
+				a.W_REM,
+				SITE_IMG1,
+				b.EL,
+				b.W_TEMP,
+				b.SCOND,
+				b.TSS
+		FROM gw_site_info a 
+		LEFT OUTER join(
+			SELECT	row_number()over(partition by site_code order by data_time desc) b_rn,
+					site_code, data_time,
+					EL,
+					W_TEMP,
+					SCOND,
+					TSS
+			FROM	gw_data_value
+	    	GROUP	by site_code,
+					data_time,
+	    		 	EL,
+	    		 	W_TEMP,
+	    		 	SCOND,
+	    		 	TSS
+		) b
+		ON a.site_code = b.site_code
+		AND b.b_rn = 1
+		WHERE 1=1
+		AND manager_code = #{managerCode}
+		<if test="searchKeyword !='' and searchKeyword != null">
+			<if test="searchCondition == 'name'">
+				AND a.site_nm = #{searchKeyword}
+			</if>
+			<if test="searchCondition == 'code'">
+				AND a.site_code = #{searchKeyword} 
+			</if>
+		</if>
+		ORDER BY site_nm
+	</select>
+	
+	<select id="selectSpotDetail" resultType="hashMap">
+		SELECT	site_code,
+				site_nm,
+				site_oper,
+				site_litd,
+				site_lttd,
+				x,
+				y,
+				cgg,
+				umd,
+				ri,
+				bunji,
+				addr,
+				rdn_addr,
+				w_type,
+				w_srv,
+				w_dtl_srv,
+				w_elev,
+				w_dig_dph,
+				w_csi_dia,
+				w_drink_yn,
+				w_public,
+				w_dvop_year,
+				w_obsv_year,
+				w_nat_wtlv,
+				w_rem,
+				site_img1,
+				site_img2,
+				site_img3,
+				gmc.manager_nm  
+		FROM	gw_site_info gsi ,
+				gw_manager_code gmc 
+		WHERE 	gmc.manager_code = gsi.manager_code 
+		AND		site_code = #{siteCode}
+	</select>
+	<select id="selectDeviceSite" resultType="hashMap">
+		SELECT	site_nm,	
+				site_code,
+				w_dig_dph,
+				w_elev,
+				w_csi_dia,
+				addr
+		FROM	gw_site_info 
+		<if test="managerCode =!'admin'">
+		WHERE	site_code = #{siteCode} 
+		</if>
+	</select>
+	<select id="selectDeviceModem" resultType="hashMap">
+		SELECT	modem_sn,
+				modem_model,
+				modem_tel,
+				ins_date
+		FROM	gw_modem_info
+		<if test="managerCode =!'admin'">
+		WHERE	site_code = #{siteCode}
+		</if>
+	</select>
+	<select id="selectDeviceSensor" resultType="hashMap">
+		SELECT	row_number() over(order by sensor_sn) rn,
+				sensor_sn,
+				sensor_nm,
+				sensor_type,
+				max_press,
+				max_ec,
+				ins_date,
+				sensor_del_date
+		FROM	gw_sensor_info 
+		<if test="managerCode =!'admin'">
+		WHERE	site_code = #{siteCode}
+		</if>		
+	</select>
+		<select id="selectDeviceRtu" resultType="hashMap">
+		SELECT	rtu_sn,
+				rtu_model,
+				telecom,
+				protocol
+		FROM	gw_rtu_info 
+		<if test="managerCode =!'admin'">
+		WHERE	site_code = #{siteCode}
+		</if>
+	</select>
+</mapper>

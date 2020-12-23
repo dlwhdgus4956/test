@@ -1,0 +1,21 @@
+/*SCDream*/
+@font-face {
+  font-family: 'SCDream';
+  font-style: normal;
+  font-weight: 400;
+  src: url('SCDreamRegular.eot');
+  src: url('SCDreamRegular.eot?#iefix') format('embedded-opentype'),
+       url('SCDreamRegular.woff2') format('woff2'),
+       url('SCDreamRegular.woff') format('woff'),
+       url('SCDreamRegular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'SCDream';
+  font-style: normal;
+  font-weight: 600;
+  src: url('SCDreambold.eot');
+  src: url('SCDreambold.eot?#iefix') format('embedded-opentype'),
+       url('SCDreambold.woff2') format('woff2'),
+       url('SCDreambold.woff') format('woff'),
+       url('SCDreambold.ttf') format('truetype');
+}

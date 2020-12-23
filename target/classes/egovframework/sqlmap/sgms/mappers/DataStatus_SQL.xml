@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sgms.dataStatus.service.impl.DataStatusMapper">
+	
+	<select id="selectBoxList" resultType="hashMap">
+		SELECT	gsi.site_code,
+				gsi.site_nm,
+				gmc.manager_code,
+				gmc.manager_nm
+		FROM 	gw_site_info gsi ,
+				gw_manager_code gmc
+		WHERE	gsi.manager_code = gmc.manager_code  
+		<if test="managerCode !='admin'">
+			AND	gsi.manager_code = #{managerCode}
+		</if>  
+	</select>
+	<select id="selectChartAndTableData" resultType="hashMap">
+	<![CDATA[ 
+		SELECT	site_code,
+				site_name,
+				site_hour,
+				m_sn,
+				avg_gl,
+				avg_el,
+				avg_press,
+				avg_temp,
+				avg_ntu,
+				avg_tss,
+				avg_scond,
+				avg_baro,
+				avg_bat
+		FROM	gw_data_value_hour  
+		WHERE	site_code = #{siteCode}
+		AND		site_hour < #{eDate}
+		AND		site_hour > #{sDate}
+		order by site_hour
+	]]>
+	</select>
+</mapper>

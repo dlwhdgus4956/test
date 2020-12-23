@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.cms.cmmn.service.impl.CmmnMapper">
+
+	<resultMap type="UserVO" id="userMap">
+		<id column="user_id" property = "userId"/>
+		<id column="password" property = "password"/>
+		<id column="authorities" property = "authorities"/>
+		<id column="username_id" property = "name"/>
+		<id column="email " property = "email "/>
+		<id column="enabled" property = "enabled"/>
+		<id column="managed_code" property = "managedCode"/>
+	</resultMap>
+
+	<!-- 로그인 -->
+	<select id="findOne" parameterType="String" resultMap="userMap">
+		SELECT user_id, 
+       			password, 
+       			(select authorities from tb_user_auth b where b.user_id = a.user_id) as authorities, 
+       			name, 
+       			email, 
+       			enabled,
+       			managed_code
+		FROM tb_user a
+		WHERE user_id = #{userId}
+	</select>
+
+	<!-- 회원가입 -->
+	<insert id="insertUser"  parameterType="UserVO">
+		INSERT INTO tb_user(
+            			user_id, 
+            			password,
+            			name, 
+            			email,
+            			enabled,
+            			tel,
+            			dept)
+	    VALUES (#{userId}, 
+	    		#{password},
+	    		#{name},
+	    		#{email},
+	    		'0',
+	    		#{tel},
+	    		#{dept})
+	</insert>
+	<insert id="insertUserAuth"  parameterType="UserVO">
+		INSERT INTO tb_user_auth(
+            			user_id,
+            			authorities
+            			)
+	    VALUES (#{userId},
+	    		'ROLE_USER'
+	    		)
+	</insert>	
+	
+	<!-- 회원수정 -->
+	<update id="updateUser" parameterType="hashMap">
+		UPDATE tb_user
+		   SET  name = #{name}, 
+		   		email = #{email}, 
+		   		enabled = #{enabled}, 
+		       	tel = #{tel}, 
+		       	dept = #{dept}
+		WHERE user_id = #{userId}
+	</update>
+	<update id="updateUserAuth" parameterType="hashMap">
+		UPDATE tb_user_auth
+		   SET  authorities = #{auth}
+		WHERE user_id = #{userId}
+	</update>
+	
+	<!-- 회원가입 ID 중복 체크  -->
+	<select id="memberIdCheck" parameterType="hashMap" resultType="int">
+		SELECT 
+			count(user_id)  
+		FROM tb_user			
+		WHERE user_id = #{userId} 
+	</select>
+	
+	<!-- 패스워드초기화 -->
+	<update id="updatePwInit" parameterType="hashMap">
+		UPDATE tb_user
+		SET    password = #{password}
+		WHERE user_id = #{userId}
+	</update>
+	
+	<!-- 메뉴권한체크 -->
+	<select id="selecAuthCheck" parameterType="hashMap" resultType="hashMap">
+		
+		SELECT distinct(B.MENU_URL) 
+		FROM TB_CMMN_MENU_GROUP A
+		LEFT OUTER JOIN TB_CMMN_MENU B ON B.MENU_CODE = A.MENU_CODE
+		WHERE 1=1 
+		AND A.authorities = #{auth}
+		AND B.menu_url = #{getUrl}
+	
+	</select>
+	
+	<!-- 내정보  -->
+	<select id="selectAcountView" parameterType="hashMap" resultType="hashMap">
+		select 
+			user_id, 
+            password,
+            name, 
+            email,
+            enabled,
+            tel,
+            dept,
+            (select authorities from tb_user_auth b where b.user_id = a.user_id) as authorities
+		from tb_user a
+		where 1=1
+			and user_id = #{userId} 
+	</select>
+	
+	<!--내정보 수정  -->
+	<update id="updateAcount" parameterType="UserVO" >
+		UPDATE tb_user 
+		SET		        
+		        user_id = #{userId}, 
+            	name = #{name}, 
+	            email = #{email},
+	            tel = #{tel},
+	            dept = #{dept}
+		WHERE user_id = #{userId}
+	</update>
+	
+	<!--내정보 비밀번호 수정  -->
+	<update id="updateAcountPw" parameterType="UserVO" >
+		UPDATE tb_user 
+		SET		        
+            	password = #{password}
+		WHERE user_id = #{userId}
+	</update>
+	
+	<!-- 메인메뉴 -->
+	<select id="selectMenu" parameterType="hashMap" resultType="hashMap">
+		
+		SELECT menu_code,
+			menu_nm,
+			menu_url,
+			upper_menu_code
+		
+		FROM TB_CMMN_MENU
+		WHERE 1=1 
+		AND menu_code LIKE '%0000'
+		ORDER BY menu_code ASC
+		
+	</select>
+	
+	
+	<!-- leftMenu -->
+   <select id="selectLeftMenu" parameterType="hashMap" resultType="hashMap">
+      
+      SELECT menu_code,
+            menu_nm,
+            menu_url,
+            upper_menu_code,
+            upper_menu_code2
+      FROM TB_CMMN_MENU
+      WHERE 1=1
+      AND menu_code NOT LIKE '%0000'
+      AND upper_menu_code = (SELECT distinct(upper_menu_code) 
+                        FROM TB_CMMN_MENU 
+                        WHERE MENU_URL LIKE #{subMenuUrl}||'%')
+      ORDER BY menu_code ASC
+      
+   </select>
+   
+   <!-- leftMenu 대메뉴 -->
+   <select id="selectBestLeftMenu" parameterType="hashMap" resultType="hashMap">
+      
+      SELECT menu_code, 
+             menu_nm, 
+             menu_url, 
+             upper_menu_code 
+      FROM   tb_cmmn_menu 
+      WHERE  1 = 1 
+             AND menu_code LIKE '%0000' 
+             AND upper_menu_code = (SELECT distinct(upper_menu_code) 
+                                    FROM   tb_cmmn_menu 
+                                    WHERE  MENU_URL LIKE #{subMenuUrl}||'%') 
+      ORDER  BY menu_code ASC
+      
+   </select>
+	
+	
+	
+	<!-- 인터셉터- 접근권한 -->
+	<select id="selectAcceptAuth" parameterType="hashMap" resultType="hashMap">
+		
+		SELECT aa.menu_url
+		FROM tb_cmmn_menu aa 
+		LEFT OUTER JOIN 
+		(
+		   SELECT authorities, menu_code, reg_date
+		   FROM tb_cmmn_menu_group
+		   WHERE authorities  = (SELECT authorities FROM tb_user_auth WHERE user_id = #{userId})) bb ON aa.menu_code = bb.menu_code
+		
+		WHERE bb.authorities IS NULL
+		ORDER BY aa.menu_code ASC
+		
+	</select>
+	
+	<!-- 공지사항리스트  -->
+	<select id="selectNoticeList" parameterType="hashMap" resultType="hashMap">
+		select 
+			notice_no
+			,title
+			,content
+			,writer
+			,wri_date
+			,file_no
+			,remove_stat
+		from tb_notice
+		where 1=1
+			and remove_stat = 'N'
+			<if test="searchkeyword != null and searchkeyword != ''">
+				<choose>
+					<when test='searchtype == "1"'>
+						AND writer LIKE '%'|| #{searchkeyword} ||'%'
+				    </when>
+				    <when test='searchtype == "2"'>
+						AND title LIKE '%'|| #{searchkeyword} ||'%'
+				    </when>
+				    									    									    
+				    <when test='searchtype == ""'>
+						AND (
+							writer LIKE '%'|| #{searchkeyword} ||'%'												
+							or title LIKE '%'|| #{searchkeyword} ||'%'
+						)
+					</when>
+				</choose>
+			</if>	
+		LIMIT 10 OFFSET #{startNo}
+	</select>
+	
+	<select id="selectNoticeListCount" parameterType="hashMap" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM tb_notice
+			WHERE 1=1
+				and remove_stat = 'N'
+				<if test="searchkeyword != null and searchkeyword != ''">
+					<choose>
+						<when test='searchtype == "1"'>
+							AND writer LIKE '%'|| #{searchkeyword} ||'%'
+					    </when>
+					    <when test='searchtype == "2"'>
+							AND title LIKE '%'|| #{searchkeyword} ||'%'
+					    </when>
+					    									    									    
+					    <when test='searchtype == ""'>
+							AND (
+								writer LIKE '%'|| #{searchkeyword} ||'%'												
+								or title LIKE '%'|| #{searchkeyword} ||'%'
+							)
+						</when>
+					</choose>
+				</if>	
+				LIMIT 10 OFFSET #{startNo}
+	</select>	
+	
+	<!-- 공지사항 조회  -->
+	<select id="selectNotice" parameterType="hashMap" resultType="hashMap">
+		select 
+			aa.notice_no
+			,aa.title
+			,aa.content
+			,aa.writer
+			,aa.wri_date
+			,aa.file_no
+			,aa.remove_stat
+			,file.file_org_nm
+		from tb_notice aa
+			LEFT OUTER JOIN tb_file_info file ON file.FILE_NO = aa.FILE_NO
+		where 1=1
+			and notice_no = #{noticeNo}
+	</select>	
+	
+	<!-- 자료실 리스트  -->
+	<select id="selectRecsroomList" parameterType="hashMap" resultType="hashMap">
+		select 
+			recsroom_no
+			,title
+			,content
+			,writer
+			,wri_date
+			,file_no
+			,remove_stat
+		from tb_recsroom
+		where 1=1
+			and remove_stat = 'N'
+			<if test="searchkeyword != null and searchkeyword != ''">
+				<choose>
+					<when test='searchtype == "1"'>
+						AND writer LIKE '%'|| #{searchkeyword} ||'%'
+				    </when>
+				    <when test='searchtype == "2"'>
+						AND title LIKE '%'|| #{searchkeyword} ||'%'
+				    </when>
+				    									    									    
+				    <when test='searchtype == ""'>
+						AND (
+							writer LIKE '%'|| #{searchkeyword} ||'%'												
+							or title LIKE '%'|| #{searchkeyword} ||'%'
+						)
+					</when>
+				</choose>
+			</if>	
+		LIMIT 10 OFFSET #{startNo}
+	</select>
+	
+	<select id="selectRecsroomListCount" parameterType="hashMap" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM tb_recsroom
+			WHERE 1=1
+				and remove_stat = 'N'
+				<if test="searchkeyword != null and searchkeyword != ''">
+					<choose>
+						<when test='searchtype == "1"'>
+							AND writer LIKE '%'|| #{searchkeyword} ||'%'
+					    </when>
+					    <when test='searchtype == "2"'>
+							AND title LIKE '%'|| #{searchkeyword} ||'%'
+					    </when>
+					    									    									    
+					    <when test='searchtype == ""'>
+							AND (
+								writer LIKE '%'|| #{searchkeyword} ||'%'												
+								or title LIKE '%'|| #{searchkeyword} ||'%'
+							)
+						</when>
+					</choose>
+				</if>	
+				LIMIT 10 OFFSET #{startNo}
+	</select>
+	
+	<!-- 자료실 조회  -->
+	<select id="selectRecsroom" parameterType="hashMap" resultType="hashMap">
+		select 
+			aa.recsroom_no
+			,aa.title
+			,aa.content
+			,aa.writer
+			,aa.wri_date
+			,aa.file_no
+			,aa.remove_stat
+			,file.file_org_nm
+		from tb_recsroom aa
+			LEFT OUTER JOIN tb_file_info file ON file.FILE_NO = aa.FILE_NO
+		where 1=1
+			and recsroom_no = #{recsroomNo}
+	</select>
+	
+	<!-- 요청게시판 리스트  -->
+	<select id="selectReqList" parameterType="hashMap" resultType="hashMap">
+		select 
+			req_no
+			,title
+			,content
+			,writer
+			,wri_date
+			,file_no
+			,remove_stat
+		from tb_reqboard
+		where 1=1
+			and remove_stat = 'N'
+			<if test="searchkeyword != null and searchkeyword != ''">
+				<choose>
+					<when test='searchtype == "1"'>
+						AND writer LIKE '%'|| #{searchkeyword} ||'%'
+				    </when>
+				    <when test='searchtype == "2"'>
+						AND title LIKE '%'|| #{searchkeyword} ||'%'
+				    </when>
+				    									    									    
+				    <when test='searchtype == ""'>
+						AND (
+							writer LIKE '%'|| #{searchkeyword} ||'%'												
+							or title LIKE '%'|| #{searchkeyword} ||'%'
+						)
+					</when>
+				</choose>
+			</if>	
+		LIMIT 10 OFFSET #{startNo}
+	</select>
+	
+	<select id="selectReqListCount" parameterType="hashMap" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM tb_reqboard
+			WHERE 1=1
+				and remove_stat = 'N'
+				<if test="searchkeyword != null and searchkeyword != ''">
+					<choose>
+						<when test='searchtype == "1"'>
+							AND writer LIKE '%'|| #{searchkeyword} ||'%'
+					    </when>
+					    <when test='searchtype == "2"'>
+							AND title LIKE '%'|| #{searchkeyword} ||'%'
+					    </when>
+					    									    									    
+					    <when test='searchtype == ""'>
+							AND (
+								writer LIKE '%'|| #{searchkeyword} ||'%'												
+								or title LIKE '%'|| #{searchkeyword} ||'%'
+							)
+						</when>
+					</choose>
+				</if>	
+				LIMIT 10 OFFSET #{startNo}
+	</select>	
+	
+	<!-- 요청게시판 조회  -->
+	<select id="selectReq" parameterType="hashMap" resultType="hashMap">
+		select 
+			aa.req_no
+			,aa.title
+			,aa.content
+			,aa.writer
+			,aa.wri_date
+			,aa.file_no
+			,aa.remove_stat
+			,file.file_org_nm
+		from tb_reqboard aa
+			LEFT OUTER JOIN tb_file_info file ON file.FILE_NO = aa.FILE_NO
+		where 1=1
+			and req_no = #{reqNo}
+	</select>
+	
+	<!-- 요청게시판 등록 -->
+	<insert id="insertReq" parameterType="hashMap">
+	
+		INSERT INTO tb_reqboard(
+            			req_no, 
+            			title,
+            			content, 
+            			writer,
+            			wri_date,
+            			file_no)
+	    VALUES (nextval('req_no_seq'), 
+	    		#{title},
+	    		#{content},
+	    		#{writer},
+	    		to_char(now(), 'YYYYMMDD'), 
+	    		#{fileNo})
+	
+	</insert>
+	
+	<!-- 요청게시판 수정 -->
+	<update id="updateReq" parameterType="hashMap">
+	
+		UPDATE tb_reqboard
+		   SET  
+		   		title = #{title} 
+		   		,content = #{content}
+		   		,writer = #{writer} 
+		       	,wri_date = to_char(now(), 'YYYYMMDD')
+		       	,file_no = #{fileNo}
+		WHERE req_no = #{reqNo}
+	
+	</update>
+	
+	<!--요청게시판 삭제  -->
+	<update id="deleteReq" parameterType="long">
+	
+		UPDATE tb_reqboard 
+		SET 	remove_stat = 'Y'
+		WHERE req_no = #{reqNo}
+		
+	</update>
+	
+	<!-- 업로드파일 일괄삭제 Null처리 -->
+	<update id="deleteReqFile" parameterType="long" flushCache="true">
+	
+		UPDATE tb_reqboard 
+		SET 	file_no = NULL
+	 	WHERE req_no = #{reqNo}
+	 	
+	</update>
+	
+	<!--접속로그 등록  -->
+	<insert id="insertLoginLog" parameterType="hashMap">
+		
+		INSERT INTO tb_login_log(
+	            user_id, 
+	            user_nm, 
+	            user_ip, 
+	            connect_date,
+	            connect_time
+	            )
+	    VALUES (#{userId}, 
+	    		#{userNm},
+	    		#{userIp}, 
+	    		to_char(sysdate, 'YYYYMMDD'),
+	    		to_char(sysdate, 'HH24MISS')
+	    		)
+		
+	</insert>
+	
+	<!--시스템로그 등록  -->
+	<insert id="insertSystemLog" parameterType="hashMap">
+		
+		INSERT INTO tb_system_log(
+	            user_id, 
+	            user_ip, 
+	            req_date,
+	            req_time,
+	            req_url,
+	            req_url_nm
+	            )
+	    VALUES (#{userId}, 
+	    		#{userIp}, 
+	    		to_char(now(), 'YYYYMMDD'),
+	    		to_char(now(), 'HH24MISS'),
+	    		#{reqUrl},
+	    		#{reqUrlNm}
+	    		)
+		
+	</insert>
+	
+</mapper>

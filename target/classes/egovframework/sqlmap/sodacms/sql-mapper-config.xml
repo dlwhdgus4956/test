@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+	<!-- MyBatis typeAliases 설정 -->
+    <typeAliases>
+		<!-- <package name="kr.co.commons"/> -->
+		 <package name="kr.co"/>
+		 <!--
+		<typeAlias alias="UserVO" type="kr.co.cms.security.UserVO"/>
+		<typeAlias alias="obsvUserVO" type="kr.co.gwatcher.obsv.service.ObsvUserVO"/>
+		<typeAlias alias="watcherVO" type="kr.co.gwatcher.watcher.service.WatcherVO"/>
+		<typeAlias alias="wellVO" type="kr.co.gwatcher.obsv.service.WellVO"/>
+		<typeAlias alias="metaVO" type="kr.co.gwatcher.obsv.service.MetaVO"/>
+		<typeAlias alias="obsvSdtaVO" type="kr.co.gwatcher.obsv.service.ObsvSdtaVO"/>
+		 <typeAlias alias="egovMapVO" type="kr.co.cms.cmmn.EgovMapVO"/>
+		 -->
+		<!-- <typeAlias alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMapVO"/> -->
+		
+    </typeAliases>
+
+</configuration>

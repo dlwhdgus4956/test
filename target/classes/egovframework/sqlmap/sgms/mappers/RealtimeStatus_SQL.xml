@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sgms.realtimeStatus.service.impl.RealtimeStatusMapper">
+	<select id="selectRealDataList" resultType="hashMap">
+		SELECT	row_number() over() rn,
+				gsi.site_nm,
+				gsi.site_code,
+				gmi.modem_tel,
+				gsi.w_dig_dph,
+				gsi.w_elev,
+				lastData.data_time,
+				gdv.el,
+				gdv.gl,
+				gdv.w_press,
+				gdv.scond ,
+				gdv.w_baro,
+				gdv.battery 
+		FROM	gw_site_info gsi ,
+				(SELECT	data_time,
+						site_code,
+						row_number() over(PARTITION BY site_code ORDER BY data_time desc) rnumber
+				 FROM	gw_data_value 
+				 ORDER BY rnumber 
+				 LIMIT 	(select	count(site_code) from	gw_site_info )
+				) lastData ,
+				gw_modem_info gmi ,
+				gw_data_value gdv 
+		WHERE	gsi.site_code = lastData.site_code
+		AND		gsi.site_code = gmi.site_code
+		AND		gsi.site_code = gdv.site_code
+		AND		lastData.site_code = gmi.site_code
+		AND		lastData.data_time = gdv.data_time
+		AND 	gmi.site_code = gdv.site_code
+		<if test="managerCode != 'admin'">
+		AND		gsi.manager_code = #{managerCode}
+		</if>
+		<if test="searchKeyword !='' and searchKeyword != null">
+			<if test="searchCondition == 'siteName'">
+				AND gsi.site_nm = #{searchKeyword}
+			</if>
+			<if test="searchCondition == 'siteCode'">
+				AND gsi.site_code = #{searchKeyword} 
+			</if>
+		</if>
+	</select>
+	
+</mapper>
